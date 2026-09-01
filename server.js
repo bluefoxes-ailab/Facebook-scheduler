@@ -1,4 +1,3 @@
-// server.js
 require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
@@ -12,7 +11,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.use(express.json());
 app.use(express.static(path.join(__dirname))); // Serves your index.html
 
-// Secure storage mapping (Tokens are pulled from .env)
+
 const teamConfig = {
   gaming: {
     password: process.env.GAMING_PASSWORD,
@@ -37,7 +36,7 @@ const teamConfig = {
   }
 };
 
-// 1. Endpoint to verify the password securely
+
 app.post('/api/verify', (req, res) => {
   const { team, password } = req.body;
   if (teamConfig[team] && teamConfig[team].password === password) {
@@ -47,11 +46,11 @@ app.post('/api/verify', (req, res) => {
   }
 });
 
-// 2. Endpoint to publish to Facebook
+
 app.post('/api/publish', upload.single('media'), async (req, res) => {
   const { team, pageId, caption, password, isVideo } = req.body;
 
-  // Re-verify password to ensure unauthorized users can't post
+ 
   if (!teamConfig[team] || teamConfig[team].password !== password) {
     return res.status(401).json({ error: 'Unauthorized' });
   }

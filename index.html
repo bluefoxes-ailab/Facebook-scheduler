@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Creator Studio | Team Publisher</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Added PicMo Emoji Picker Libraries -->
+  
   <style>
     :root {
       --primary: #00f2fe;
@@ -28,7 +28,7 @@
 
     body {
       font-family: 'Poppins', sans-serif;
-      /* Dynamic Animated Gradient Background */
+      
       background: linear-gradient(-45deg, #1a0b2e, #4a1942, #890c25, #0f172a, #2e0854);
       background-size: 400% 400%;
       animation: gradientBG 15s ease infinite;
@@ -48,7 +48,7 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* Glassmorphism Container */
+    
     .container {
       background: var(--glass-bg);
       backdrop-filter: blur(16px);
@@ -79,7 +79,7 @@
 
     .hidden { display: none !important; }
 
-    /* Buttons */
+    
     .btn {
       display: inline-flex;
       justify-content: center;
@@ -134,7 +134,7 @@
     }
     .btn-back:hover { background: rgba(255,255,255,0.1); color: #fff; }
 
-    /* Form Elements */
+    
     .form-group { margin-bottom: 24px; }
     label { 
       display: block; 
@@ -171,10 +171,10 @@
       resize: vertical; 
       min-height: 120px; 
       line-height: 1.6; 
-      padding-right: 50px; /* Space for the emoji button */
+      padding-right: 50px; 
     }
 
-    /* Emoji Picker Styling */
+    
     .caption-wrapper {
       position: relative;
     }
@@ -202,7 +202,7 @@
       transform: scale(1.1);
     }
 
-    /* Custom File Upload */
+    
     .file-upload-wrapper {
       position: relative;
       border: 2px dashed rgba(255,255,255,0.3);
@@ -235,7 +235,7 @@
       font-size: 1.1rem;
     }
 
-    /* Radio Buttons */
+   
     .radio-group { 
       display: flex; 
       gap: 20px; 
@@ -261,7 +261,7 @@
       cursor: pointer;
     }
 
-    /* Status Message */
+   
     #statusMessage {
       margin-top: 24px;
       padding: 16px;
@@ -275,12 +275,10 @@
     .success { background-color: var(--success-bg); color: #fff; border: 1px solid var(--success-border); }
     .error { background-color: var(--error-bg); color: #fff; border: 1px solid var(--error-border); }
 
-    /* Password Section */
+    
     .password-container { text-align: center; }
     .password-container input { margin-bottom: 20px; text-align: center; letter-spacing: 3px; font-size: 1.2rem; }
-  /* --- EMOJI MENU BACKGROUND FIX --- */
-    
-    /* Target the popup container */
+  
     .picmo-popup {
       background-color: #1a1a2e !important; 
       border-radius: 30px !important;
@@ -288,7 +286,7 @@
       border: 1px solid var(--glass-border) !important;
     }
 
-    /* Target the custom element itself */
+    
     picmo-picker {
       background-color: #1a1a2e !important;
     }
@@ -298,7 +296,7 @@
 </head>
 <body>
 
-<!-- SCREEN 1: Team Selection -->
+
 <div class="container" id="loginScreen">
   <h2>Select Workspace</h2>
   <div class="login-btns">
@@ -307,7 +305,7 @@
   </div>
 </div>
 
-<!-- SCREEN 2: Password Verification -->
+
 <div class="container hidden" id="passwordScreen">
   <div class="password-container">
     <h2 id="passwordTitle">Enter Password</h2>
@@ -318,7 +316,7 @@
   </div>
 </div>
 
-<!-- SCREEN 3: Post Composer -->
+
 <div class="container hidden" id="composerScreen">
   <h2 id="teamTitle">Composer</h2>
   
@@ -364,7 +362,7 @@
 </div>
 
 <script>
-  // --- CONFIGURATION ---
+  
   
   
 
@@ -391,18 +389,16 @@
 
   
 
-  // --- PASSWORD & NAVIGATION LOGIC ---
 
   function requestPassword(team) {
     pendingTeam = team;
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('passwordScreen').classList.remove('hidden');
     
-    // Set dynamic text
+    
     const title = team === 'gaming' ? '🎮 Gaming Login' : '🕵️ True Crime Login';
     document.getElementById('passwordTitle').innerText = title;
     
-    // Reset inputs & focus
     document.getElementById('teamPassword').value = '';
     document.getElementById('passwordError').classList.add('hidden');
     document.getElementById('teamPassword').focus();
@@ -422,7 +418,7 @@
   });
 
   if (response.ok) {
-    // Store password temporarily in a variable to send with the upload request
+   
     window.currentSessionPassword = input; 
     document.getElementById('passwordScreen').classList.add('hidden');
     loadComposer(pendingTeam);
@@ -433,28 +429,25 @@
 }
 
   function resetToLogin() {
-    // Hide active screens, show login
+    
     document.getElementById('passwordScreen').classList.add('hidden');
     document.getElementById('composerScreen').classList.add('hidden');
     document.getElementById('loginScreen').classList.remove('hidden');
     
-    // --- COMPLETELY CLEAR THE FORM STATE ---
     
-    // 1. Clear the caption
     document.getElementById('caption').value = '';
     
-    // 2. Clear the uploaded file and reset upload text
+    
     document.getElementById('mediaUpload').value = '';
     updateFileName(); 
     
-    // 3. Clear schedule date
+   
     document.getElementById('scheduleTime').value = '';
     
-    // 4. Reset to 'Publish Now'
+  
     document.querySelector('input[name="publishType"][value="now"]').checked = true;
-    toggleSchedule(); // This will re-hide the schedule date input
+    toggleSchedule(); 
 
-    // 5. Hide any previous success/error messages
     document.getElementById('statusMessage').classList.add('hidden');
     document.getElementById('statusMessage').textContent = '';
     
@@ -466,11 +459,11 @@
   function loadComposer(team) {
     document.getElementById('composerScreen').classList.remove('hidden');
     
-    // Set UI details
+    
     document.getElementById('teamTitle').innerText = team === 'gaming' ? '🎮 Gaming Workspace' : '🕵️ True Crime Workspace';
     activeTeamData = teamsData[team];
     
-    // Populate dropdown
+   
     const pageSelect = document.getElementById('pageSelect');
     pageSelect.innerHTML = ''; 
     activeTeamData.forEach((page, index) => {
@@ -480,18 +473,18 @@
       pageSelect.appendChild(option);
     });
 
-    // --- INITIALIZE PICMO EMOJI PICKER (DYNAMIC IMPORT) ---
+    
     if (!emojiPickerInstance) {
       const button = document.querySelector('#emojiBtn');
       const captionInput = document.querySelector('#caption');
       
-      // Fetch the library directly using modern dynamic imports
+     
       import('https://cdn.jsdelivr.net/npm/@picmo/popup-picker@5.8.5/+esm')
         .then(module => {
-          // Initialize the popup
+        
           emojiPickerInstance = module.createPopup(
             { 
-              theme: 'dark' // Matches your UI
+              theme: 'dark' 
             }, 
             {
               referenceElement: button,
@@ -500,12 +493,11 @@
             }
           );
 
-          // Listen for the emoji selection
+          
           emojiPickerInstance.addEventListener('emoji:select', selection => {
             captionInput.value += selection.emoji;
           });
 
-          // Toggle the menu on button click
           button.addEventListener('click', () => {
             emojiPickerInstance.toggle();
           });
@@ -557,16 +549,15 @@
     const file = fileInput.files[0];
     const isVideo = file.type.includes('video');
 
-    // 1. Prepare data for YOUR backend, not Facebook
     const formData = new FormData();
-    formData.append('media', file); // Multer on the backend looks for 'media'
+    formData.append('media', file); 
     formData.append('team', pendingTeam);
     formData.append('pageId', selectedPage.id);
     formData.append('caption', caption);
-    formData.append('password', window.currentSessionPassword); // Sent for verification
+    formData.append('password', window.currentSessionPassword); 
     formData.append('isVideo', isVideo.toString()); 
 
-    // 2. Handle Scheduling Logic
+    
     if (isSchedule) {
       if (!scheduleTime) return showStatus("⚠️ Please select a time to schedule.", true);
       
@@ -588,14 +579,14 @@
     showStatus("Uploading asset... Do not close window.");
 
     try {
-      // 3. Send to YOUR secure Node.js server instead of Facebook
+     
       const response = await fetch('/api/publish', {
         method: 'POST',
         body: formData
       });
       const result = await response.json();
 
-      // Check if the server returned a success or error response
+      
       if (!response.ok || result.error) {
         showStatus("❌ Error: " + (result.error || "Upload failed"), true);
       } else {
