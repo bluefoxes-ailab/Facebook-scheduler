@@ -48,7 +48,7 @@ app.post('/api/verify', (req, res) => {
 
 
 app.post('/api/publish', upload.single('media'), async (req, res) => {
-  const { team, pageId, caption, password, isVideo } = req.body;
+  const { team, pageId, caption, password, isVideo, universalId } = req.body;
 
  
   if (!teamConfig[team] || teamConfig[team].password !== password) {
@@ -68,6 +68,11 @@ app.post('/api/publish', upload.single('media'), async (req, res) => {
     form.append('source', req.file.buffer, { filename: req.file.originalname });
     form.append(isVideo === 'true' ? 'description' : 'caption', caption);
 
+
+    if (universalId) {
+      form.append('universal_video_id', universalId);
+    }
+    
     if (req.body.isSchedule === 'true') {
       form.append('published', 'false');
       form.append('scheduled_publish_time', req.body.scheduled_publish_time);
