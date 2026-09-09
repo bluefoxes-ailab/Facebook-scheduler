@@ -291,7 +291,60 @@
       background-color: #1a1a2e !important;
     }
   
-  
+  .checkbox-container {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+  cursor: pointer;
+}
+
+.checkbox-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.checkbox-item span {
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+.select-all-btn {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 8px;
+  text-align: right;
+  align-self: flex-end;
+}
+
+.select-all-btn:hover {
+  text-decoration: underline;
+}
   </style>
 </head>
 <body>
@@ -321,9 +374,12 @@
   <h2 id="teamTitle">Composer</h2>
   
   <div class="form-group">
-    <label for="pageSelect">Select Page</label>
-    <select id="pageSelect"></select>
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <label>Select Target Pages</label>
+    <button type="button" class="select-all-btn" onclick="toggleSelectAll()">Select All</button>
   </div>
+  <div class="checkbox-container" id="pageCheckboxList"></div>
+</div>
 
   <div class="form-group">
     <label>Creative Asset</label>
@@ -462,55 +518,7 @@
 
   let emojiPickerInstance = null;
 
-  function loadComposer(team) {
-    document.getElementById('composerScreen').classList.remove('hidden');
-    
-    
-    document.getElementById('teamTitle').innerText = team === 'gaming' ? '🎮 Gaming Workspace' : '🕵️ True Crime Workspace';
-    activeTeamData = teamsData[team];
-    
-   
-    const pageSelect = document.getElementById('pageSelect');
-    pageSelect.innerHTML = ''; 
-    activeTeamData.forEach((page, index) => {
-      const option = document.createElement('option');
-      option.value = index; 
-      option.textContent = page.name;
-      pageSelect.appendChild(option);
-    });
-
-    
-    if (!emojiPickerInstance) {
-      const button = document.querySelector('#emojiBtn');
-      const captionInput = document.querySelector('#caption');
-      
-     
-      import('https://cdn.jsdelivr.net/npm/@picmo/popup-picker@5.8.5/+esm')
-        .then(module => {
-        
-          emojiPickerInstance = module.createPopup(
-            { 
-              theme: 'dark' 
-            }, 
-            {
-              referenceElement: button,
-              triggerElement: button,
-              position: 'bottom-end'
-            }
-          );
-
-          
-          emojiPickerInstance.addEventListener('emoji:select', selection => {
-            captionInput.value += selection.emoji;
-          });
-
-          button.addEventListener('click', () => {
-            emojiPickerInstance.toggle();
-          });
-        })
-        .catch(err => console.error("Emoji picker failed to load:", err));
-    }
-  }
+  
 
   function updateFileName() {
     const fileInput = document.getElementById('mediaUpload');
@@ -540,77 +548,133 @@
     statusEl.classList.remove('hidden');
   }
 
-  async function submitPost() {
-    const pageIndex = document.getElementById('pageSelect').value;
-    const fileInput = document.getElementById('mediaUpload');
-    const caption = document.getElementById('caption').value;
-    const universalId = document.getElementById('universalId').value;
-    const isSchedule = document.querySelector('input[name="publishType"]:checked').value === 'schedule';
-    const scheduleTime = document.getElementById('scheduleTime').value;
+  function loadComposer(team) {
+  document.getElementById('composerScreen').classList.remove('hidden');
+  document.getElementById('teamTitle').innerText = team === 'gaming' ? '🎮 Gaming Workspace' : '🕵️ True Crime Workspace';
+  activeTeamData = teamsData[team];
 
-    if (!fileInput.files.length) {
-      return showStatus("⚠️ Please select a media asset to upload.", true);
+  // Render Page Checkboxes
+  const listContainer = document.getElementById('pageCheckboxList');
+  listContainer.innerHTML = '';
+
+  activeTeamData.forEach((page) => {
+    const label = document.createElement('label');
+    label.className = 'checkbox-item';
+    label.innerHTML = `
+      <input type="checkbox" name="targetPages" value="${page.id}">
+      <span>${page.name}</span>
+    `;
+    listContainer.appendChild(label);
+  });
+
+  // Emoji Picker initialization (keeps your existing logic)
+  if (!emojiPickerInstance) {
+    const button = document.querySelector('#emojiBtn');
+    const captionInput = document.querySelector('#caption');
+
+    import('https://cdn.jsdelivr.net/npm/@picmo/popup-picker@5.8.5/+esm')
+      .then(module => {
+        emojiPickerInstance = module.createPopup(
+          { theme: 'dark' },
+          { referenceElement: button, triggerElement: button, position: 'bottom-end' }
+        );
+        emojiPickerInstance.addEventListener('emoji:select', selection => {
+          captionInput.value += selection.emoji;
+        });
+        button.addEventListener('click', () => {
+          emojiPickerInstance.toggle();
+        });
+      })
+      .catch(err => console.error("Emoji picker failed to load:", err));
+  }
+}
+
+// Helper to select/deselect all pages at once
+function toggleSelectAll() {
+  const checkboxes = document.querySelectorAll('input[name="targetPages"]');
+  const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+  checkboxes.forEach(cb => cb.checked = !allChecked);
+}
+
+async function submitPost() {
+  // Collect all checked Page IDs
+  const checkedBoxes = document.querySelectorAll('input[name="targetPages"]:checked');
+  const selectedPageIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+  if (selectedPageIds.length === 0) {
+    return showStatus("⚠️ Please select at least one page.", true);
+  }
+
+  const fileInput = document.getElementById('mediaUpload');
+  const caption = document.getElementById('caption').value;
+  const universalId = document.getElementById('universalId').value;
+  const isSchedule = document.querySelector('input[name="publishType"]:checked').value === 'schedule';
+  const scheduleTime = document.getElementById('scheduleTime').value;
+
+  if (!fileInput.files.length) {
+    return showStatus("⚠️ Please select a media asset to upload.", true);
+  }
+
+  const file = fileInput.files[0];
+  const isVideo = file.type.includes('video');
+
+  const formData = new FormData();
+  formData.append('media', file);
+  formData.append('team', pendingTeam);
+  
+  // Sends page IDs as a JSON array string: '["894332950616089", "115642145136159"]'
+  formData.append('pageIds', JSON.stringify(selectedPageIds));
+  
+  formData.append('caption', caption);
+  formData.append('password', window.currentSessionPassword);
+  formData.append('isVideo', isVideo.toString());
+
+  if (universalId.trim() !== "") {
+    formData.append('universalId', universalId.trim());
+  }
+
+  if (isSchedule) {
+    if (!scheduleTime) return showStatus("⚠️ Please select a time to schedule.", true);
+
+    const scheduledDate = new Date(scheduleTime);
+    const now = new Date();
+    const diffMinutes = (scheduledDate - now) / 60000;
+
+    if (diffMinutes < 10 || diffMinutes > (30 * 24 * 60)) {
+      return showStatus("⚠️ Facebook rules: Schedule time must be between 10 minutes and 30 days from now.", true);
     }
 
-    const selectedPage = activeTeamData[pageIndex];
-    const file = fileInput.files[0];
-    const isVideo = file.type.includes('video');
+    formData.append('isSchedule', 'true');
+    formData.append('scheduled_publish_time', Math.floor(scheduledDate.getTime() / 1000));
+  }
 
-    const formData = new FormData();
-    formData.append('media', file); 
-    formData.append('team', pendingTeam);
-    formData.append('pageId', selectedPage.id);
-    formData.append('caption', caption);
-    formData.append('password', window.currentSessionPassword); 
-    formData.append('isVideo', isVideo.toString()); 
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  submitBtn.innerText = `⏳ Publishing to ${selectedPageIds.length} page(s)...`;
+  showStatus(`Broadcasting post to ${selectedPageIds.length} destination(s)... Do not close.`);
 
-    if (universalId.trim() !== "") {
-      formData.append('universalId', universalId.trim());
+  try {
+    const response = await fetch('/api/publish', {
+      method: 'POST',
+      body: formData
+    });
+    const result = await response.json();
+
+    if (!response.ok || result.error) {
+      showStatus("❌ Error: " + (result.error || "Upload failed"), true);
+    } else {
+      showStatus(`✅ Success! Published to ${selectedPageIds.length} page(s).`);
+      fileInput.value = '';
+      updateFileName();
+      document.getElementById('caption').value = '';
+      document.querySelectorAll('input[name="targetPages"]').forEach(cb => cb.checked = false);
     }
-
-    if (isSchedule) {
-      if (!scheduleTime) return showStatus("⚠️ Please select a time to schedule.", true);
-      
-      const scheduledDate = new Date(scheduleTime);
-      const now = new Date();
-      const diffMinutes = (scheduledDate - now) / 60000;
-      
-      if (diffMinutes < 10 || diffMinutes > (30 * 24 * 60)) {
-        return showStatus("⚠️ Facebook rules: Schedule time must be between 10 minutes and 30 days from now.", true);
-      }
-      
-      formData.append('isSchedule', 'true');
-      formData.append('scheduled_publish_time', Math.floor(scheduledDate.getTime() / 1000));
-    }
-
-    const submitBtn = document.getElementById('submitBtn');
-    submitBtn.disabled = true;
-    submitBtn.innerText = "⏳ Beaming up to server...";
-    showStatus("Uploading asset... Do not close window.");
-
-    try {
-     
-      const response = await fetch('/api/publish', {
-        method: 'POST',
-        body: formData
-      });
-      const result = await response.json();
-
-      
-      if (!response.ok || result.error) {
-        showStatus("❌ Error: " + (result.error || "Upload failed"), true);
-      } else {
-        showStatus("✅ Success! Post ID: " + result.id);
-        fileInput.value = '';
-        updateFileName(); 
-        document.getElementById('caption').value = '';
-      }
-    } catch (error) {
-      showStatus("❌ Network Error: " + error.message, true);
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.innerText = "🚀 Launch Post";
-    }
+  } catch (error) {
+    showStatus("❌ Network Error: " + error.message, true);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerText = "🚀 Launch Post";
+  }
 }
 </script>
 
