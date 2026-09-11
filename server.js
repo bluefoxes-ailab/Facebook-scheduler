@@ -1,12 +1,13 @@
 require('dotenv').config();
 const express = require('express');
+const fs = require('fs');
 const multer = require('multer');
 const axios = require('axios');
 const FormData = require('form-data');
 const path = require('path');
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ dest: 'uploads/' });
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname))); 
@@ -49,8 +50,75 @@ const teamConfig = {
       "103817179282493": process.env.PROTECTOR_CHRONICLES_TOKEN,
     }
   }
-
 };
+
+// --- HELPER: Resumable Video Upload ---
+async function uploadVideoResumable(pageId, token, filePath, caption, reqBody) {
+  const stats = fs.statSync(filePath);
+  const fileSize = stats.size;
+  const baseUrl = `https://graph.facebook.com/v20.0/${pageId}/videos`;
+
+  // 1. START PHASE
+  const startRes = await axios.post(baseUrl, null, {
+    params: {
+      upload_phase: 'start',
+      access_token: token,
+      file_size: fileSize
+    }
+  });
+
+  const { upload_session_id, video_id } = startRes.data;
+  let { start_offset, end_offset } = startRes.data;
+
+  // 2. TRANSFER PHASE
+  while (start_offset < fileSize) {
+    const chunkStream = fs.createReadStream(filePath, {
+      start: parseInt(start_offset),
+      // fs.createReadStream 'end' is inclusive, so we subtract 1 from Facebook's offset
+      end: parseInt(end_offset) > 0 ? parseInt(end_offset) - 1 : undefined
+    });
+
+    const form = new FormData();
+    form.append('upload_phase', 'transfer');
+    form.append('access_token', token);
+    form.append('upload_session_id', upload_session_id);
+    form.append('start_offset', start_offset.toString());
+    form.append('video_file_chunk', chunkStream, { filename: 'chunk.mp4' });
+
+    const transferRes = await axios.post(baseUrl, form, {
+      headers: form.getHeaders(),
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity
+    });
+
+    start_offset = transferRes.data.start_offset;
+    end_offset = transferRes.data.end_offset;
+  }
+
+  // 3. FINISH PHASE
+  const finishForm = new FormData();
+  finishForm.append('upload_phase', 'finish');
+  finishForm.append('access_token', token);
+  finishForm.append('upload_session_id', upload_session_id);
+  finishForm.append('description', caption);
+
+  if (reqBody.universalId) {
+    finishForm.append('universal_video_id', reqBody.universalId);
+  }
+
+  if (reqBody.isSchedule === 'true') {
+    finishForm.append('published', 'false');
+    finishForm.append('scheduled_publish_time', reqBody.scheduled_publish_time);
+  }
+
+  const finishRes = await axios.post(baseUrl, finishForm, {
+    headers: finishForm.getHeaders()
+  });
+
+  return finishRes.data;
+}
+
+// --- API ROUTES ---
 
 app.post('/api/verify', (req, res) => {
   const { team, password } = req.body;
@@ -62,78 +130,63 @@ app.post('/api/verify', (req, res) => {
 });
 
 app.post('/api/publish', upload.single('media'), async (req, res) => {
-  const { team, password, caption, isVideo, universalId } = req.body;
+  const { team, password, caption, isVideo } = req.body;
 
-  // 1. Password Verification
   if (!teamConfig[team] || teamConfig[team].password !== password) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // 2. Parse Incoming Page ID(s)
   let targetPageIds = [];
   try {
-    if (req.body.pageIds) {
-      targetPageIds = JSON.parse(req.body.pageIds);
-    } else if (req.body.pageId) {
-      targetPageIds = [req.body.pageId];
-    }
+    targetPageIds = req.body.pageIds ? JSON.parse(req.body.pageIds) : [req.body.pageId];
   } catch {
-    return res.status(400).json({ error: 'Invalid Page IDs payload format' });
+    return res.status(400).json({ error: 'Invalid Page IDs format' });
   }
 
   if (!Array.isArray(targetPageIds) || targetPageIds.length === 0) {
     return res.status(400).json({ error: 'No target pages selected' });
   }
 
-  // 3. Publish to all pages in parallel
   const uploadPromises = targetPageIds.map(async (pageId) => {
     const token = teamConfig[team].pages[pageId];
-    if (!token) {
-      throw new Error(`Token missing or invalid Page ID: ${pageId}`);
+    if (!token) throw new Error(`Token missing or invalid for Page ID: ${pageId}`);
+
+    // If Video -> Use Chunked Upload. If Image -> Use Standard Direct Upload.
+    if (isVideo === 'true') {
+      const data = await uploadVideoResumable(pageId, token, req.file.path, caption, req.body);
+      return { pageId, data };
+    } else {
+      const endpoint = `https://graph.facebook.com/v20.0/${pageId}/photos`;
+      const form = new FormData();
+      form.append('access_token', token);
+      form.append('source', fs.createReadStream(req.file.path), { filename: req.file.originalname });
+      form.append('caption', caption);
+      
+      if (req.body.isSchedule === 'true') {
+        form.append('published', 'false');
+        form.append('scheduled_publish_time', req.body.scheduled_publish_time);
+      }
+
+      const response = await axios.post(endpoint, form, { headers: form.getHeaders() });
+      return { pageId, data: response.data };
     }
-
-    const endpoint = isVideo === 'true'
-      ? `https://graph.facebook.com/v20.0/${pageId}/videos`
-      : `https://graph.facebook.com/v20.0/${pageId}/photos`;
-
-    const form = new FormData();
-    form.append('access_token', token);
-    form.append('source', req.file.buffer, { filename: req.file.originalname });
-    form.append(isVideo === 'true' ? 'description' : 'caption', caption);
-
-    if (universalId) {
-      form.append('universal_video_id', universalId);
-    }
-
-    if (req.body.isSchedule === 'true') {
-      form.append('published', 'false');
-      form.append('scheduled_publish_time', req.body.scheduled_publish_time);
-    }
-
-    const response = await axios.post(endpoint, form, {
-      headers: form.getHeaders(),
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity
-    });
-
-    return { pageId, data: response.data };
   });
 
   const results = await Promise.allSettled(uploadPromises);
 
-  // 4. Summarize successes and failures
-  const successful = results
-    .filter(r => r.status === 'fulfilled')
-    .map(r => r.value);
+  // Clean up: Delete the temporary file
+  if (req.file && req.file.path) {
+    fs.unlink(req.file.path, (err) => {
+      if (err) console.error("Failed to delete temp file:", err);
+    });
+  }
 
-  const failed = results
-    .filter(r => r.status === 'rejected')
+  const successful = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+  const failed = results.filter(r => r.status === 'rejected')
     .map(r => r.reason?.response?.data?.error?.message || r.reason?.message || 'Upload failed');
 
   if (successful.length === 0) {
-    return res.status(500).json({
-      error: `All uploads failed: ${failed.join(' | ')}`
-    });
+    return res.status(500).json({ error: `All uploads failed: ${failed.join(' | ')}` });
   }
 
   return res.json({
