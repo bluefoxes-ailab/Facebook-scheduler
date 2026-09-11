@@ -345,6 +345,17 @@
 .select-all-btn:hover {
   text-decoration: underline;
 }
+:root {
+  /* ...existing variables... */
+  --news: #0072ff;
+  --news-hover: #00c6ff;
+}
+
+.btn-news { 
+  background: linear-gradient(135deg, var(--news), var(--news-hover));
+  box-shadow: 0 10px 20px rgba(0, 114, 255, 0.3);
+}
+.btn-news:hover { box-shadow: 0 15px 25px rgba(0, 114, 255, 0.5); }
   </style>
 </head>
 <body>
@@ -355,6 +366,7 @@
   <div class="login-btns">
     <button class="btn btn-gaming" onclick="requestPassword('gaming')">🎮 Gaming </button>
     <button class="btn btn-crime" onclick="requestPassword('trueCrime')">🕵️ True Crime </button>
+    <button class="btn btn-news" onclick="requestPassword('Karma')">👁️ Karma</button>
   </div>
 </div>
 
@@ -442,6 +454,19 @@
     trueCrime: [
       { name: "Killer Bites", id: "107635881202158"},
       { name: "Binge Society - Dark", id: "111107098020809"}
+    ],
+    Karma: [
+      { name: "Karma Moments", id: "114227735048877"},
+      { name: "Karma Chronicles", id: "109971608789113"},
+      { name: "Karma Central", id: "104262996056582"},
+      { name: "Buzzer Beater", id: "1917462381705981"},
+      { name: "Dark Chronicles", id: "117880948011569"},
+      { name: "Binge TV", id: "111069038279400"},
+      { name: "Mystic Chronicles", id: "100742323080074"},
+      { name: "Supermission", id: "115090033689282"},
+      { name: "Gadget Radar", id: "106037948551056"},
+      { name: "Unbroken Chronicles", id: "100327096455522"},
+      { name: "Protector Chronicles", id: "103817179282493"}
     ]
   };
 
@@ -452,18 +477,22 @@
 
 
   function requestPassword(team) {
-    pendingTeam = team;
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('passwordScreen').classList.remove('hidden');
-    
-    
-    const title = team === 'gaming' ? '🎮 Gaming Login' : '🕵️ True Crime Login';
-    document.getElementById('passwordTitle').innerText = title;
-    
-    document.getElementById('teamPassword').value = '';
-    document.getElementById('passwordError').classList.add('hidden');
-    document.getElementById('teamPassword').focus();
-  }
+  pendingTeam = team;
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('passwordScreen').classList.remove('hidden');
+
+  const titles = {
+    gaming: '🎮 Gaming Login',
+    trueCrime: '🕵️ True Crime Login',
+    Karma: '👁️ Karma Login' // Add your new workspace key and display title here
+  };
+
+  document.getElementById('passwordTitle').innerText = titles[team] || 'Enter Password';
+
+  document.getElementById('teamPassword').value = '';
+  document.getElementById('passwordError').classList.add('hidden');
+  document.getElementById('teamPassword').focus();
+}
 
   function checkEnterKey(e) {
     if (e.key === 'Enter') verifyPassword();
@@ -550,8 +579,15 @@
 
   function loadComposer(team) {
   document.getElementById('composerScreen').classList.remove('hidden');
-  document.getElementById('teamTitle').innerText = team === 'gaming' ? '🎮 Gaming Workspace' : '🕵️ True Crime Workspace';
-  activeTeamData = teamsData[team];
+
+  const workspaceTitles = {
+    gaming: '🎮 Gaming Workspace',
+    trueCrime: '🕵️ True Crime Workspace',
+    Karma: '👁️ Karma Workspace' // Add your new workspace key and title here
+  };
+
+  document.getElementById('teamTitle').innerText = workspaceTitles[team] || 'Composer';
+  activeTeamData = teamsData[team] || [];
 
   // Render Page Checkboxes
   const listContainer = document.getElementById('pageCheckboxList');
@@ -567,7 +603,7 @@
     listContainer.appendChild(label);
   });
 
-  // Emoji Picker initialization (keeps your existing logic)
+  // Emoji Picker initialization
   if (!emojiPickerInstance) {
     const button = document.querySelector('#emojiBtn');
     const captionInput = document.querySelector('#caption');

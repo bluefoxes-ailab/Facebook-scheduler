@@ -9,7 +9,7 @@ const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname))); // Serves your index.html
+app.use(express.static(path.join(__dirname))); 
 
 const teamConfig = {
   gaming: {
@@ -32,7 +32,24 @@ const teamConfig = {
       "107635881202158": process.env.KILLER_BITES_TOKEN,
       "111107098020809": process.env.BINGE_SOCIETY_TOKEN,
     }
+  },
+  Karma: {
+    password: process.env.KARMA_PASSWORD,
+    pages: {
+      "114227735048877": process.env.KARMA_MOMENTS_TOKEN,
+      "109971608789113": process.env.KARMA_CHRONICLES_TOKEN,
+      "104262996056582": process.env.KARMA_CENTRAL_TOKEN,
+      "1917462381705981": process.env.BUZZER_BEATER_TOKEN,
+      "117880948011569": process.env.DARK_CHRONICLES_TOKEN,
+      "111069038279400": process.env.BINGE_TV_TOKEN,
+      "100742323080074": process.env.MYSTIC_CHRONICLES_TOKEN,
+      "115090033689282": process.env.SUPERMISSION_TOKEN,
+      "106037948551056": process.env.GADGET_RADAR_TOKEN,
+      "100327096455522": process.env.UNBROKEN_CHRONICLES_TOKEN,
+      "103817179282493": process.env.PROTECTOR_CHRONICLES_TOKEN,
+    }
   }
+
 };
 
 app.post('/api/verify', (req, res) => {
