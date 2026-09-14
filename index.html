@@ -356,6 +356,18 @@
   box-shadow: 0 10px 20px rgba(0, 114, 255, 0.3);
 }
 .btn-news:hover { box-shadow: 0 15px 25px rgba(0, 114, 255, 0.5); }
+
+:root {
+  /* Existing variables */
+  --sports: #ff9800;
+  --sports-hover: #ffb74d;
+}
+
+.btn-sports { 
+  background: linear-gradient(135deg, var(--sports), var(--sports-hover));
+  box-shadow: 0 10px 20px rgba(255, 152, 0, 0.3);
+}
+.btn-sports:hover { box-shadow: 0 15px 25px rgba(255, 152, 0, 0.5); }
   </style>
 </head>
 <body>
@@ -367,6 +379,7 @@
     <button class="btn btn-gaming" onclick="requestPassword('gaming')">🎮 Gaming </button>
     <button class="btn btn-crime" onclick="requestPassword('trueCrime')">🕵️ True Crime </button>
     <button class="btn btn-news" onclick="requestPassword('Karma')">👁️ Karma</button>
+    <button class="btn btn-sports" onclick="requestPassword('sports')">🏅 Sports</button>
   </div>
 </div>
 
@@ -468,6 +481,9 @@
       { name: "Gadget Radar", id: "106037948551056"},
       { name: "Unbroken Chronicles", id: "100327096455522"},
       { name: "Protector Chronicles", id: "103817179282493"}
+    ],
+    Sports: [
+      { name: "Fight Source", id: "109559704772146"}
     ]
   };
 
@@ -485,7 +501,8 @@
   const titles = {
     gaming: '🎮 Gaming Login',
     trueCrime: '🕵️ True Crime Login',
-    Karma: '👁️ Karma Login' // Add your new workspace key and display title here
+    Karma: '👁️ Karma Login', // Add your new workspace key and display title here
+    sports: '🏅 Sports Login'
   };
 
   document.getElementById('passwordTitle').innerText = titles[team] || 'Enter Password';
@@ -584,7 +601,8 @@
   const workspaceTitles = {
     gaming: '🎮 Gaming Workspace',
     trueCrime: '🕵️ True Crime Workspace',
-    Karma: '👁️ Karma Workspace' // Add your new workspace key and title here
+    Karma: '👁️ Karma Workspace' ,// Add your new workspace key and title here
+    sports: '🏅 Sports Workspace'
   };
 
   document.getElementById('teamTitle').innerText = workspaceTitles[team] || 'Composer';

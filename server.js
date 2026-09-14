@@ -50,7 +50,14 @@ const teamConfig = {
       "100327096455522": process.env.UNBROKEN_CHRONICLES_TOKEN,
       "103817179282493": process.env.PROTECTOR_CHRONICLES_TOKEN,
     }
-  }
+  },
+Sports: {
+  password: process.env.SPORTS_PASSWORD,
+  pages: {
+    "109559704772146": process.env.FIGHT_SOURCE_TOKEN,
+  }
+
+}
 };
 
 // --- HELPER: Resumable Video Upload ---
