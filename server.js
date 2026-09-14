@@ -32,6 +32,7 @@ const teamConfig = {
     pages: {
       "107635881202158": process.env.KILLER_BITES_TOKEN,
       "111107098020809": process.env.BINGE_SOCIETY_TOKEN,
+      "101581832346980": process.env.FATAL_FILES_TOKEN,
     }
   },
   Karma: {
