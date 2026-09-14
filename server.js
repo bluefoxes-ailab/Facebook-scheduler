@@ -51,7 +51,7 @@ const teamConfig = {
       "103817179282493": process.env.PROTECTOR_CHRONICLES_TOKEN,
     }
   },
-Sports: {
+sports: {
   password: process.env.SPORTS_PASSWORD,
   pages: {
     "109559704772146": process.env.FIGHT_SOURCE_TOKEN,
