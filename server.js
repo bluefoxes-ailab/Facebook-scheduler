@@ -55,6 +55,7 @@ sports: {
   password: process.env.SPORTS_PASSWORD,
   pages: {
     "109559704772146": process.env.FIGHT_SOURCE_TOKEN,
+    "522957638064464": process.env.ULTIMATE_FREESTYLE_TOKEN,
   }
 
 }
