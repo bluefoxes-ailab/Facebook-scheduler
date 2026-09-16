@@ -198,13 +198,23 @@ app.post('/api/publish', upload.single('media'), async (req, res) => {
     return res.status(500).json({ error: `All uploads failed: ${failed.join(' | ')}` });
   }
 
-  return res.json({
-    success: true,
-    publishedCount: successful.length,
-    failedCount: failed.length,
-    results: successful,
-    errors: failed
-  });
+  // --- ADD THIS NEW TRACKING BLOCK HERE ---
+  // This formats a line of text: "Date, Team, Successes, Fails" and adds a new line (\n)
+  const logEntry = `${new Date().toISOString()},${team},${successful.length},${failed.length}\n`;
+  
+  // This saves it to a file named 'post_analytics.csv'
+  fs.appendFile('post_analytics.csv', logEntry, (err) => {
+    if (err) console.error("Failed to write to analytics log:", err);
+  });
+  // ----------------------------------------
+
+  return res.json({
+    success: true,
+    publishedCount: successful.length,
+    failedCount: failed.length,
+    results: successful,
+    errors: failed
+  });
 });
 
 app.listen(3000, () => console.log('Server running on http://localhost:3000'));
