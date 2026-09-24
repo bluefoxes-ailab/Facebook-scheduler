@@ -115,6 +115,16 @@ async function uploadVideoResumable(pageId, token, filePath, caption, reqBody) {
     finishForm.append('universal_video_id', reqBody.universalId);
   }
 
+// Audience targeting for Video
+  if (reqBody.targetAudience === 'US') {
+    const targeting = {
+      geo_locations: {
+        countries: ['US']
+      }
+    };
+    finishForm.append('feed_targeting', JSON.stringify(targeting));
+  }
+
   if (reqBody.isSchedule === 'true') {
     finishForm.append('published', 'false');
     finishForm.append('scheduled_publish_time', reqBody.scheduled_publish_time);
@@ -139,74 +149,84 @@ app.post('/api/verify', (req, res) => {
 });
 
 app.post('/api/publish', upload.single('media'), async (req, res) => {
-  const { team, password, caption, isVideo } = req.body;
+  const { team, password, caption, isVideo, targetAudience } = req.body;
 
-  if (!teamConfig[team] || teamConfig[team].password !== password) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  if (!teamConfig[team] || teamConfig[team].password !== password) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
 
-  let targetPageIds = [];
-  try {
-    targetPageIds = req.body.pageIds ? JSON.parse(req.body.pageIds) : [req.body.pageId];
-  } catch {
-    return res.status(400).json({ error: 'Invalid Page IDs format' });
-  }
+  let targetPageIds = [];
+  try {
+    targetPageIds = req.body.pageIds ? JSON.parse(req.body.pageIds) : [req.body.pageId];
+  } catch {
+    return res.status(400).json({ error: 'Invalid Page IDs format' });
+  }
 
-  if (!Array.isArray(targetPageIds) || targetPageIds.length === 0) {
-    return res.status(400).json({ error: 'No target pages selected' });
-  }
+  if (!Array.isArray(targetPageIds) || targetPageIds.length === 0) {
+    return res.status(400).json({ error: 'No target pages selected' });
+  }
 
-  const uploadPromises = targetPageIds.map(async (pageId) => {
-    const token = teamConfig[team].pages[pageId];
-    if (!token) throw new Error(`Token missing or invalid for Page ID: ${pageId}`);
+  const uploadPromises = targetPageIds.map(async (pageId) => {
+    const token = teamConfig[team].pages[pageId];
+    if (!token) throw new Error(`Token missing or invalid for Page ID: ${pageId}`);
 
-    // If Video -> Use Chunked Upload. If Image -> Use Standard Direct Upload.
-    if (isVideo === 'true') {
-      const data = await uploadVideoResumable(pageId, token, req.file.path, caption, req.body);
-      return { pageId, data };
-    } else {
-      const endpoint = `https://graph.facebook.com/v20.0/${pageId}/photos`;
-      const form = new FormData();
-      form.append('access_token', token);
-      form.append('source', fs.createReadStream(req.file.path), { filename: req.file.originalname });
-      form.append('caption', caption);
-      
-      if (req.body.isSchedule === 'true') {
-        form.append('published', 'false');
-        form.append('scheduled_publish_time', req.body.scheduled_publish_time);
-      }
+    // If Video -> Use Chunked Upload. If Image -> Use Standard Direct Upload.
+    if (isVideo === 'true') {
+      const data = await uploadVideoResumable(pageId, token, req.file.path, caption, req.body);
+      return { pageId, data };
+    } else {
+      const endpoint = `https://graph.facebook.com/v20.0/${pageId}/photos`;
+      const form = new FormData();
+      form.append('access_token', token);
+      form.append('source', fs.createReadStream(req.file.path), { filename: req.file.originalname });
+      form.append('caption', caption);
 
-      const response = await axios.post(endpoint, form, { headers: form.getHeaders() });
-      return { pageId, data: response.data };
-    }
-  });
+      // Audience targeting for Photos
+      if (targetAudience === 'US') {
+        const targeting = {
+          geo_locations: {
+            countries: ['US']
+          }
+        };
+        form.append('feed_targeting', JSON.stringify(targeting));
+      }
+      
+      if (req.body.isSchedule === 'true') {
+        form.append('published', 'false');
+        form.append('scheduled_publish_time', req.body.scheduled_publish_time);
+      }
 
-  const results = await Promise.allSettled(uploadPromises);
+      const response = await axios.post(endpoint, form, { headers: form.getHeaders() });
+      return { pageId, data: response.data };
+    }
+  });
 
-  // Clean up: Delete the temporary file
-  if (req.file && req.file.path) {
-    fs.unlink(req.file.path, (err) => {
-      if (err) console.error("Failed to delete temp file:", err);
-    });
-  }
+  const results = await Promise.allSettled(uploadPromises);
 
-  const successful = results.filter(r => r.status === 'fulfilled').map(r => r.value);
-  const failed = results.filter(r => r.status === 'rejected')
-    .map(r => r.reason?.response?.data?.error?.message || r.reason?.message || 'Upload failed');
+  // Clean up: Delete the temporary file
+  if (req.file && req.file.path) {
+    fs.unlink(req.file.path, (err) => {
+      if (err) console.error("Failed to delete temp file:", err);
+    });
+  }
 
-  if (successful.length === 0) {
-    return res.status(500).json({ error: `All uploads failed: ${failed.join(' | ')}` });
-  }
+  const successful = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+  const failed = results.filter(r => r.status === 'rejected')
+    .map(r => r.reason?.response?.data?.error?.message || r.reason?.message || 'Upload failed');
 
-  // --- ADD THIS NEW TRACKING BLOCK HERE ---
-  // This formats a line of text: "Date, Team, Successes, Fails" and adds a new line (\n)
-  const logEntry = `${new Date().toISOString()},${team},${successful.length},${failed.length}\n`;
+  if (successful.length === 0) {
+    return res.status(500).json({ error: `All uploads failed: ${failed.join(' | ')}` });
+  }
+
+  // --- UPDATED TRACKING LOG ---
+  const audienceTag = targetAudience === 'US' ? 'US' : 'Default';
+  const uId = req.body.universalId ? req.body.universalId.trim() : 'N/A';
+  const logEntry = `${new Date().toISOString()},${team},${uId},${audienceTag},${successful.length},${failed.length}\n`;
   
-  // This saves it to a file named 'post_analytics.csv'
   fs.appendFile('post_analytics.csv', logEntry, (err) => {
     if (err) console.error("Failed to write to analytics log:", err);
   });
-  // ----------------------------------------
+  // ---------------------------
 
   return res.json({
     success: true,
