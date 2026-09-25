@@ -105,30 +105,27 @@ async function uploadVideoResumable(pageId, token, filePath, caption, reqBody) {
   }
 
   // 3. FINISH PHASE
-  const finishForm = new FormData();
-  finishForm.append('upload_phase', 'finish');
-  finishForm.append('access_token', token);
-  finishForm.append('upload_session_id', upload_session_id);
-  finishForm.append('description', caption);
+  const finishForm = new FormData();
+  finishForm.append('upload_phase', 'finish');
+  finishForm.append('access_token', token);
+  finishForm.append('upload_session_id', upload_session_id);
+  finishForm.append('description', caption);
 
-  if (reqBody.universalId) {
-    finishForm.append('universal_video_id', reqBody.universalId);
-  }
-
-// Audience targeting for Video
-  if (reqBody.targetAudience === 'US') {
-    const targeting = {
-      geo_locations: {
-        countries: ['US']
-      }
-    };
-    finishForm.append('feed_targeting', JSON.stringify(targeting));
+  if (reqBody.universalId) {
+    finishForm.append('universal_video_id', reqBody.universalId);
   }
 
-  if (reqBody.isSchedule === 'true') {
-    finishForm.append('published', 'false');
-    finishForm.append('scheduled_publish_time', reqBody.scheduled_publish_time);
-  }
+  // Audience targeting for Videos
+  if (reqBody.targetAudience === 'US') {
+    finishForm.append('targeting', JSON.stringify({
+      geo_locations: { countries: ['US'] }
+    }));
+  }
+
+  if (reqBody.isSchedule === 'true') {
+    finishForm.append('published', 'false');
+    finishForm.append('scheduled_publish_time', reqBody.scheduled_publish_time);
+  }
 
   const finishRes = await axios.post(baseUrl, finishForm, {
     headers: finishForm.getHeaders()
@@ -181,15 +178,7 @@ app.post('/api/publish', upload.single('media'), async (req, res) => {
       form.append('source', fs.createReadStream(req.file.path), { filename: req.file.originalname });
       form.append('caption', caption);
 
-      // Audience targeting for Photos
-      if (targetAudience === 'US') {
-        const targeting = {
-          geo_locations: {
-            countries: ['US']
-          }
-        };
-        form.append('feed_targeting', JSON.stringify(targeting));
-      }
+     
       
       if (req.body.isSchedule === 'true') {
         form.append('published', 'false');
@@ -236,5 +225,13 @@ app.post('/api/publish', upload.single('media'), async (req, res) => {
     errors: failed
   });
 });
-
+app.get('/api/download-analytics', (req, res) => {
+  const filePath = path.join(__dirname, 'post_analytics.csv');
+  
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, 'post_analytics.csv');
+  } else {
+    res.status(404).send('No analytics data logged yet on this server instance.');
+  }
+});
 app.listen(3000, () => console.log('Server running on http://localhost:3000'));

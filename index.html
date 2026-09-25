@@ -692,6 +692,10 @@ async function submitPost() {
   formData.append('password', window.currentSessionPassword);
   formData.append('isVideo', isVideo.toString());
 
+  const targetAudienceInput = document.querySelector('input[name="targetAudience"]:checked');
+  const targetAudience = targetAudienceInput ? targetAudienceInput.value : 'default';
+  formData.append('targetAudience', targetAudience);
+  
   if (universalId.trim() !== "") {
     formData.append('universalId', universalId.trim());
   }
@@ -738,8 +742,7 @@ async function submitPost() {
     submitBtn.disabled = false;
     submitBtn.innerText = "🚀 Launch Post";
   }
-  const targetAudience = document.querySelector('input[name="targetAudience"]:checked').value;
-  formData.append('targetAudience', targetAudience);
+  
 }
 </script>
 
