@@ -172,21 +172,53 @@ app.post('/api/publish', upload.single('media'), async (req, res) => {
       const data = await uploadVideoResumable(pageId, token, req.file.path, caption, req.body);
       return { pageId, data };
     } else {
-      const endpoint = `https://graph.facebook.com/v20.0/${pageId}/photos`;
-      const form = new FormData();
-      form.append('access_token', token);
-      form.append('source', fs.createReadStream(req.file.path), { filename: req.file.originalname });
-      form.append('caption', caption);
-
-     
-      
-      if (req.body.isSchedule === 'true') {
+      // IF TARGETING US: Upload unpublished photo first, then publish to /feed with feed_targeting
+      if (targetAudience === 'US') {
+        const uploadEndpoint = `https://graph.facebook.com/v20.0/${pageId}/photos`;
+        const form = new FormData();
+        form.append('access_token', token);
+        form.append('source', fs.createReadStream(req.file.path), { filename: req.file.originalname });
         form.append('published', 'false');
-        form.append('scheduled_publish_time', req.body.scheduled_publish_time);
-      }
 
-      const response = await axios.post(endpoint, form, { headers: form.getHeaders() });
-      return { pageId, data: response.data };
+        const uploadRes = await axios.post(uploadEndpoint, form, { headers: form.getHeaders() });
+        const photoId = uploadRes.data.id;
+
+        const feedEndpoint = `https://graph.facebook.com/v20.0/${pageId}/feed`;
+        const feedBody = {
+          message: caption,
+          attached_media: [{ media_fbid: photoId }],
+          feed_targeting: {
+            geo_locations: { countries: ['US'] }
+          }
+        };
+
+        if (req.body.isSchedule === 'true') {
+          feedBody.published = false;
+          feedBody.scheduled_publish_time = req.body.scheduled_publish_time;
+        }
+
+        const feedRes = await axios.post(feedEndpoint, feedBody, {
+          params: { access_token: token },
+          headers: { 'Content-Type': 'application/json' }
+        });
+        return { pageId, data: feedRes.data };
+
+      } else {
+        // DEFAULT / GLOBAL: Direct photo upload (your exact original behavior)
+        const endpoint = `https://graph.facebook.com/v20.0/${pageId}/photos`;
+        const form = new FormData();
+        form.append('access_token', token);
+        form.append('source', fs.createReadStream(req.file.path), { filename: req.file.originalname });
+        form.append('caption', caption);
+        
+        if (req.body.isSchedule === 'true') {
+          form.append('published', 'false');
+          form.append('scheduled_publish_time', req.body.scheduled_publish_time);
+        }
+
+        const response = await axios.post(endpoint, form, { headers: form.getHeaders() });
+        return { pageId, data: response.data };
+      }
     }
   });
 
