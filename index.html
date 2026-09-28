@@ -444,13 +444,7 @@
     <input type="text" id="universalId" placeholder="Add an asset management code">
   </div>
 
-  <div class="form-group">
-    <label>Audience Target</label>
-    <div class="radio-group">
-      <label><input type="radio" name="targetAudience" value="default" checked> 🌍 Default (Global)</label>
-      <label><input type="radio" name="targetAudience" value="US"> 🇺🇸 Target USA (US Only)</label>
-    </div>
-  </div>
+  
   <div class="form-group radio-group">
     <label><input type="radio" name="publishType" value="now" checked onchange="toggleSchedule()"> Publish Now</label>
     <label><input type="radio" name="publishType" value="schedule" onchange="toggleSchedule()"> Schedule Post</label>
@@ -584,7 +578,7 @@
   
     document.querySelector('input[name="publishType"][value="now"]').checked = true;
     toggleSchedule(); 
-    document.querySelector('input[name="targetAudience"][value="default"]').checked = true;
+    document.querySelector('input[name="serverLocation"][value="default"]').checked = true;
     document.getElementById('statusMessage').classList.add('hidden');
     document.getElementById('statusMessage').textContent = '';
     
@@ -713,9 +707,9 @@ async function submitPost() {
   formData.append('password', window.currentSessionPassword);
   formData.append('isVideo', isVideo.toString());
 
-  const targetAudienceInput = document.querySelector('input[name="targetAudience"]:checked');
-  const targetAudience = targetAudienceInput ? targetAudienceInput.value : 'default';
-  formData.append('targetAudience', targetAudience);
+  const serverLocationInput = document.querySelector('input[name="serverLocation"]:checked');
+const serverLocation = serverLocationInput ? serverLocationInput.value : 'default';
+formData.append('serverLocation', serverLocation);
   
   if (universalId.trim() !== "") {
     formData.append('universalId', universalId.trim());

@@ -13,106 +13,105 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname))); 
 
 const teamConfig = {
-  gaming: {
-    password: process.env.GAMING_PASSWORD,
-    pages: {
-      "894332950616089": process.env.GAMOLOGY_TOKEN,
-      "115642145136159": process.env.GAMERS_ON_BOARD_TOKEN,
-      "158184731454410": process.env.PIXEL_HEROES_TOKEN,
-      "184753692121622": process.env.GAMER_FORECAST_TOKEN,
-      "104241008734361": process.env.SHIFT_FIRE_TOKEN,
-      "1383863451698458": process.env.GAMOLOGY_ASIA_TOKEN,
-      "461052150760556": process.env.FRAGS_AND_SKILLS_TOKEN,
-      "1429851870430172": process.env.GAMOLOGY_CREATORS_NETWORK_TOKEN,
-      "132863274153701": process.env.SWEET_MEMORIES_TOKEN,
-    }
-  },
-  trueCrime: {
-    password: process.env.TRUECRIME_PASSWORD,
-    pages: {
-      "107635881202158": process.env.KILLER_BITES_TOKEN,
-      "111107098020809": process.env.BINGE_SOCIETY_TOKEN,
+  gaming: {
+    password: process.env.GAMING_PASSWORD,
+    pages: {
+      "894332950616089": process.env.GAMOLOGY_TOKEN,
+      "115642145136159": process.env.GAMERS_ON_BOARD_TOKEN,
+      "158184731454410": process.env.PIXEL_HEROES_TOKEN,
+      "184753692121622": process.env.GAMER_FORECAST_TOKEN,
+      "104241008734361": process.env.SHIFT_FIRE_TOKEN,
+      "1383863451698458": process.env.GAMOLOGY_ASIA_TOKEN,
+      "461052150760556": process.env.FRAGS_AND_SKILLS_TOKEN,
+      "1429851870430172": process.env.GAMOLOGY_CREATORS_NETWORK_TOKEN,
+      "132863274153701": process.env.SWEET_MEMORIES_TOKEN,
+    }
+  },
+  trueCrime: {
+    password: process.env.TRUECRIME_PASSWORD,
+    pages: {
+      "107635881202158": process.env.KILLER_BITES_TOKEN,
+      "111107098020809": process.env.BINGE_SOCIETY_TOKEN,
       "101581832346980": process.env.FATAL_FILES_TOKEN,
-    }
-  },
-  Karma: {
-    password: process.env.KARMA_PASSWORD,
-    pages: {
-      "114227735048877": process.env.KARMA_MOMENTS_TOKEN,
-      "109971608789113": process.env.KARMA_CHRONICLES_TOKEN,
-      "104262996056582": process.env.KARMA_CENTRAL_TOKEN,
-      "1917462381705981": process.env.BUZZER_BEATER_TOKEN,
-      "117880948011569": process.env.DARK_CHRONICLES_TOKEN,
-      "111069038279400": process.env.BINGE_TV_TOKEN,
-      "100742323080074": process.env.MYSTIC_CHRONICLES_TOKEN,
-      "115090033689282": process.env.SUPERMISSION_TOKEN,
-      "106037948551056": process.env.GADGET_RADAR_TOKEN,
-      "100327096455522": process.env.UNBROKEN_CHRONICLES_TOKEN,
-      "103817179282493": process.env.PROTECTOR_CHRONICLES_TOKEN,
-    }
-  },
-sports: {
-  password: process.env.SPORTS_PASSWORD,
-  pages: {
-    "109559704772146": process.env.FIGHT_SOURCE_TOKEN,
-    "522957638064464": process.env.ULTIMATE_FREESTYLE_TOKEN,
+    }
+  },
+  Karma: {
+    password: process.env.KARMA_PASSWORD,
+    pages: {
+      "114227735048877": process.env.KARMA_MOMENTS_TOKEN,
+      "109971608789113": process.env.KARMA_CHRONICLES_TOKEN,
+      "104262996056582": process.env.KARMA_CENTRAL_TOKEN,
+      "1917462381705981": process.env.BUZZER_BEATER_TOKEN,
+      "117880948011569": process.env.DARK_CHRONICLES_TOKEN,
+      "111069038279400": process.env.BINGE_TV_TOKEN,
+      "100742323080074": process.env.MYSTIC_CHRONICLES_TOKEN,
+      "115090033689282": process.env.SUPERMISSION_TOKEN,
+      "106037948551056": process.env.GADGET_RADAR_TOKEN,
+      "100327096455522": process.env.UNBROKEN_CHRONICLES_TOKEN,
+      "103817179282493": process.env.PROTECTOR_CHRONICLES_TOKEN,
+    }
+  },
+  sports: {
+    password: process.env.SPORTS_PASSWORD,
+    pages: {
+      "109559704772146": process.env.FIGHT_SOURCE_TOKEN,
+      "522957638064464": process.env.ULTIMATE_FREESTYLE_TOKEN,
+    }
+  },
+  beauty: {
+    password: process.env.BEAUTY_PASSWORD,
+    pages: {
+      "254307648319573": process.env.BEAUTY_STUDIO_TOKEN,
+      "145836442718844": process.env.BEAUTY_HACKS_TOKEN,
+      "102094686197863": process.env.UNWRITTEN_BEAUTY_TOKEN,
+      "106158097929721": process.env.RE_BELLE_TOKEN,
+    }
   }
-},
-beauty: {
-  password: process.env.BEAUTY_PASSWORD,
-  pages: {
-    "254307648319573": process.env.BEAUTY_STUDIO_TOKEN,
-    "145836442718844": process.env.BEAUTY_HACKS_TOKEN,
-    "102094686197863": process.env.UNWRITTEN_BEAUTY_TOKEN,
-    "106158097929721": process.env.RE_BELLE_TOKEN,
-  }
-}
 };
 
 // --- HELPER: Resumable Video Upload ---
 async function uploadVideoResumable(pageId, token, filePath, caption, reqBody) {
-  const stats = fs.statSync(filePath);
-  const fileSize = stats.size;
-  const baseUrl = `https://graph.facebook.com/v20.0/${pageId}/videos`;
+  const stats = fs.statSync(filePath);
+  const fileSize = stats.size;
+  const baseUrl = `https://graph.facebook.com/v20.0/${pageId}/videos`;
 
-  // 1. START PHASE
-  const startRes = await axios.post(baseUrl, null, {
-    params: {
-      upload_phase: 'start',
-      access_token: token,
-      file_size: fileSize
-    }
-  });
+  // 1. START PHASE
+  const startRes = await axios.post(baseUrl, null, {
+    params: {
+      upload_phase: 'start',
+      access_token: token,
+      file_size: fileSize
+    }
+  });
 
-  const { upload_session_id, video_id } = startRes.data;
-  let { start_offset, end_offset } = startRes.data;
+  const { upload_session_id } = startRes.data;
+  let { start_offset, end_offset } = startRes.data;
 
-  // 2. TRANSFER PHASE
-  while (start_offset < fileSize) {
-    const chunkStream = fs.createReadStream(filePath, {
-      start: parseInt(start_offset),
-      // fs.createReadStream 'end' is inclusive, so we subtract 1 from Facebook's offset
-      end: parseInt(end_offset) > 0 ? parseInt(end_offset) - 1 : undefined
-    });
+  // 2. TRANSFER PHASE
+  while (start_offset < fileSize) {
+    const chunkStream = fs.createReadStream(filePath, {
+      start: parseInt(start_offset),
+      end: parseInt(end_offset) > 0 ? parseInt(end_offset) - 1 : undefined
+    });
 
-    const form = new FormData();
-    form.append('upload_phase', 'transfer');
-    form.append('access_token', token);
-    form.append('upload_session_id', upload_session_id);
-    form.append('start_offset', start_offset.toString());
-    form.append('video_file_chunk', chunkStream, { filename: 'chunk.mp4' });
+    const form = new FormData();
+    form.append('upload_phase', 'transfer');
+    form.append('access_token', token);
+    form.append('upload_session_id', upload_session_id);
+    form.append('start_offset', start_offset.toString());
+    form.append('video_file_chunk', chunkStream, { filename: 'chunk.mp4' });
 
-    const transferRes = await axios.post(baseUrl, form, {
-      headers: form.getHeaders(),
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity
-    });
+    const transferRes = await axios.post(baseUrl, form, {
+      headers: form.getHeaders(),
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity
+    });
 
-    start_offset = transferRes.data.start_offset;
-    end_offset = transferRes.data.end_offset;
-  }
+    start_offset = transferRes.data.start_offset;
+    end_offset = transferRes.data.end_offset;
+  }
 
-  // 3. FINISH PHASE
+  // 3. FINISH PHASE (No targeting applied -> Global visibility)
   const finishForm = new FormData();
   finishForm.append('upload_phase', 'finish');
   finishForm.append('access_token', token);
@@ -123,38 +122,31 @@ async function uploadVideoResumable(pageId, token, filePath, caption, reqBody) {
     finishForm.append('universal_video_id', reqBody.universalId);
   }
 
-  // Audience targeting for Videos
-  if (reqBody.targetAudience === 'US') {
-    finishForm.append('targeting', JSON.stringify({
-      geo_locations: { countries: ['US'] }
-    }));
-  }
-
   if (reqBody.isSchedule === 'true') {
     finishForm.append('published', 'false');
     finishForm.append('scheduled_publish_time', reqBody.scheduled_publish_time);
   }
 
-  const finishRes = await axios.post(baseUrl, finishForm, {
-    headers: finishForm.getHeaders()
-  });
+  const finishRes = await axios.post(baseUrl, finishForm, {
+    headers: finishForm.getHeaders()
+  });
 
-  return finishRes.data;
+  return finishRes.data;
 }
 
 // --- API ROUTES ---
 
 app.post('/api/verify', (req, res) => {
-  const { team, password } = req.body;
-  if (teamConfig[team] && teamConfig[team].password === password) {
-    res.json({ success: true });
-  } else {
-    res.status(401).json({ error: 'Invalid password' });
-  }
+  const { team, password } = req.body;
+  if (teamConfig[team] && teamConfig[team].password === password) {
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ error: 'Invalid password' });
+  }
 });
 
 app.post('/api/publish', upload.single('media'), async (req, res) => {
-  const { team, password, caption, isVideo, targetAudience } = req.body;
+  const { team, password, caption, isVideo } = req.body;
 
   if (!teamConfig[team] || teamConfig[team].password !== password) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -175,64 +167,29 @@ app.post('/api/publish', upload.single('media'), async (req, res) => {
     const token = teamConfig[team].pages[pageId];
     if (!token) throw new Error(`Token missing or invalid for Page ID: ${pageId}`);
 
-    // If Video -> Use Chunked Upload. If Image -> Use Standard Direct Upload.
     if (isVideo === 'true') {
       const data = await uploadVideoResumable(pageId, token, req.file.path, caption, req.body);
       return { pageId, data };
     } else {
-      // IF TARGETING US: Upload unpublished photo first, then publish to /feed with feed_targeting
-      if (targetAudience === 'US') {
-        const uploadEndpoint = `https://graph.facebook.com/v20.0/${pageId}/photos`;
-        const form = new FormData();
-        form.append('access_token', token);
-        form.append('source', fs.createReadStream(req.file.path), { filename: req.file.originalname });
+      // Direct global photo upload from Ohio US
+      const endpoint = `https://graph.facebook.com/v20.0/${pageId}/photos`;
+      const form = new FormData();
+      form.append('access_token', token);
+      form.append('source', fs.createReadStream(req.file.path), { filename: req.file.originalname });
+      form.append('caption', caption);
+      
+      if (req.body.isSchedule === 'true') {
         form.append('published', 'false');
-
-        const uploadRes = await axios.post(uploadEndpoint, form, { headers: form.getHeaders() });
-        const photoId = uploadRes.data.id;
-
-        const feedEndpoint = `https://graph.facebook.com/v20.0/${pageId}/feed`;
-        const feedBody = {
-          message: caption,
-          attached_media: [{ media_fbid: photoId }],
-          feed_targeting: {
-            geo_locations: { countries: ['US'] }
-          }
-        };
-
-        if (req.body.isSchedule === 'true') {
-          feedBody.published = false;
-          feedBody.scheduled_publish_time = req.body.scheduled_publish_time;
-        }
-
-        const feedRes = await axios.post(feedEndpoint, feedBody, {
-          params: { access_token: token },
-          headers: { 'Content-Type': 'application/json' }
-        });
-        return { pageId, data: feedRes.data };
-
-      } else {
-        // DEFAULT / GLOBAL: Direct photo upload (your exact original behavior)
-        const endpoint = `https://graph.facebook.com/v20.0/${pageId}/photos`;
-        const form = new FormData();
-        form.append('access_token', token);
-        form.append('source', fs.createReadStream(req.file.path), { filename: req.file.originalname });
-        form.append('caption', caption);
-        
-        if (req.body.isSchedule === 'true') {
-          form.append('published', 'false');
-          form.append('scheduled_publish_time', req.body.scheduled_publish_time);
-        }
-
-        const response = await axios.post(endpoint, form, { headers: form.getHeaders() });
-        return { pageId, data: response.data };
+        form.append('scheduled_publish_time', req.body.scheduled_publish_time);
       }
+
+      const response = await axios.post(endpoint, form, { headers: form.getHeaders() });
+      return { pageId, data: response.data };
     }
   });
 
   const results = await Promise.allSettled(uploadPromises);
 
-  // Clean up: Delete the temporary file
   if (req.file && req.file.path) {
     fs.unlink(req.file.path, (err) => {
       if (err) console.error("Failed to delete temp file:", err);
@@ -247,15 +204,12 @@ app.post('/api/publish', upload.single('media'), async (req, res) => {
     return res.status(500).json({ error: `All uploads failed: ${failed.join(' | ')}` });
   }
 
-  // --- UPDATED TRACKING LOG ---
-  const audienceTag = targetAudience === 'US' ? 'US' : 'Default';
   const uId = req.body.universalId ? req.body.universalId.trim() : 'N/A';
-  const logEntry = `${new Date().toISOString()},${team},${uId},${audienceTag},${successful.length},${failed.length}\n`;
+  const logEntry = `${new Date().toISOString()},${team},${uId},US-Server,${successful.length},${failed.length}\n`;
   
   fs.appendFile('post_analytics.csv', logEntry, (err) => {
     if (err) console.error("Failed to write to analytics log:", err);
   });
-  // ---------------------------
 
   return res.json({
     success: true,
@@ -265,13 +219,14 @@ app.post('/api/publish', upload.single('media'), async (req, res) => {
     errors: failed
   });
 });
+
 app.get('/api/download-analytics', (req, res) => {
   const filePath = path.join(__dirname, 'post_analytics.csv');
-  
   if (fs.existsSync(filePath)) {
     res.download(filePath, 'post_analytics.csv');
   } else {
     res.status(404).send('No analytics data logged yet on this server instance.');
   }
 });
+
 app.listen(3000, () => console.log('Server running on http://localhost:3000'));
