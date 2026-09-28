@@ -57,7 +57,15 @@ sports: {
     "109559704772146": process.env.FIGHT_SOURCE_TOKEN,
     "522957638064464": process.env.ULTIMATE_FREESTYLE_TOKEN,
   }
-
+},
+beauty: {
+  password: process.env.BEAUTY_PASSWORD,
+  pages: {
+    "254307648319573": process.env.BEAUTY_STUDIO_TOKEN,
+    "145836442718844": process.env.BEAUTY_HACKS_TOKEN,
+    "102094686197863": process.env.UNWRITTEN_BEAUTY_TOKEN,
+    "106158097929721": process.env.RE_BELLE_TOKEN,
+  }
 }
 };
 

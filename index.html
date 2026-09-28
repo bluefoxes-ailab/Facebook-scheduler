@@ -368,6 +368,18 @@
   box-shadow: 0 10px 20px rgba(255, 152, 0, 0.3);
 }
 .btn-sports:hover { box-shadow: 0 15px 25px rgba(255, 152, 0, 0.5); }
+
+:root {
+  /* ...existing variables... */
+  --beauty: #ec4899;
+  --beauty-hover: #f472b6;
+}
+
+.btn-beauty { 
+  background: linear-gradient(135deg, var(--beauty), var(--beauty-hover));
+  box-shadow: 0 10px 20px rgba(236, 72, 153, 0.3);
+}
+.btn-beauty:hover { box-shadow: 0 15px 25px rgba(236, 72, 153, 0.5); }
   </style>
 </head>
 <body>
@@ -380,6 +392,7 @@
     <button class="btn btn-crime" onclick="requestPassword('trueCrime')">🕵️ True Crime </button>
     <button class="btn btn-news" onclick="requestPassword('Karma')">👁️ Karma</button>
     <button class="btn btn-sports" onclick="requestPassword('sports')">🏅 Sports</button>
+    <button class="btn btn-beauty" onclick="requestPassword('beauty')">💄 Beauty</button>
   </div>
 </div>
 
@@ -492,6 +505,12 @@
     sports: [
       { name: "Fight Source", id: "109559704772146"},
       { name: "Ultimate Freestyle", id: "522957638064464"}
+    ],
+    beauty: [
+      { name: "Beauty Studio", id: "254307648319573"},
+      { name: "Beauty Hacks", id: "145836442718844"},
+      { name: "Unwritten Beauty", id: "102094686197863"},
+      { name: "Re-belle", id: "106158097929721"}
     ]
   };
 
@@ -510,7 +529,8 @@
     gaming: '🎮 Gaming Login',
     trueCrime: '🕵️ True Crime Login',
     Karma: '👁️ Karma Login', // Add your new workspace key and display title here
-    sports: '🏅 Sports Login'
+    sports: '🏅 Sports Login',
+    beauty: '💄 Beauty Login'
   };
 
   document.getElementById('passwordTitle').innerText = titles[team] || 'Enter Password';
@@ -610,7 +630,8 @@
     gaming: '🎮 Gaming Workspace',
     trueCrime: '🕵️ True Crime Workspace',
     Karma: '👁️ Karma Workspace' ,// Add your new workspace key and title here
-    sports: '🏅 Sports Workspace'
+    sports: '🏅 Sports Workspace',
+    beauty: '💄 Beauty Workspace'
   };
 
   document.getElementById('teamTitle').innerText = workspaceTitles[team] || 'Composer';
