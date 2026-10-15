@@ -162,6 +162,13 @@ app.post('/api/publish', upload.single('media'), async (req, res) => {
   if (!Array.isArray(targetPageIds) || targetPageIds.length === 0) {
     return res.status(400).json({ error: 'No target pages selected' });
   }
+  // Ensure Universal ID is provided for video uploads
+  if (isVideo === 'true' && (!req.body.universalId || !req.body.universalId.trim())) {
+    if (req.file && req.file.path) {
+      fs.unlink(req.file.path, () => {});
+    }
+    return res.status(400).json({ error: "Please enter the Universal ID before publishing the video." });
+  }
 
   const uploadPromises = targetPageIds.map(async (pageId) => {
     const token = teamConfig[team].pages[pageId];

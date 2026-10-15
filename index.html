@@ -696,6 +696,10 @@ async function submitPost() {
   const file = fileInput.files[0];
   const isVideo = file.type.includes('video');
 
+  if (isVideo && !universalId.trim()) {
+    return showStatus("⚠️ Please enter the Universal ID before publishing the video.", true);
+  }
+  
   const formData = new FormData();
   formData.append('media', file);
   formData.append('team', pendingTeam);
