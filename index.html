@@ -440,6 +440,13 @@
   </div>
 
   <div class="form-group">
+  <label for="firstComment">First Comment (Optional)</label>
+  <div class="caption-wrapper">
+    <textarea id="firstComment" placeholder="Write the first comment..." style="min-height: 80px;"></textarea>
+  </div>
+</div>
+
+  <div class="form-group">
     <label for="universalId">Universal ID</label>
     <input type="text" id="universalId" placeholder="Add an asset management code">
   </div>
@@ -454,7 +461,30 @@
     <label for="scheduleTime">Schedule Date & Time :</label>
     <input type="datetime-local" id="scheduleTime">
   </div>
+<div style="margin-top: 30px; padding: 20px; border: 1px dashed var(--glass-border); border-radius: 12px; background: rgba(0,0,0,0.25);">
+  <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--primary);">💬 Comment on Existing Post / Video</h3>
+  
+  <div class="form-group">
+    <label for="manualTargetPage">Select Page</label>
+    <select id="manualTargetPage">
+      <option value="">-- Select a Page --</option>
+    </select>
+  </div>
 
+  <div class="form-group">
+    <label for="manualPostId">Post ID or Video ID</label>
+    <input type="text" id="manualPostId" placeholder="e.g. 123456789012345 or 894332950616089_1234567890">
+  </div>
+
+  <div class="form-group">
+    <label for="manualCommentText">Comment Content</label>
+    <textarea id="manualCommentText" placeholder="Enter your comment..." style="min-height: 70px;"></textarea>
+  </div>
+
+  <button type="button" class="btn btn-submit" style="background: rgba(255,255,255,0.15); color: #fff; margin-top: 5px;" onclick="submitManualComment()">
+    💬 Post Comment to Existing Post
+  </button>
+</div>
   <button class="btn btn-submit" id="submitBtn" onclick="submitPost()">🚀 Launch Post</button>
   <button class="btn btn-back" onclick="resetToLogin()">Log Out / Switch Team</button>
 
@@ -665,6 +695,12 @@
       })
       .catch(err => console.error("Emoji picker failed to load:", err));
   }
+  // Inside loadComposer(team):
+const manualDropdown = document.getElementById('manualTargetPage');
+manualDropdown.innerHTML = '<option value="">-- Select a Page --</option>';
+activeTeamData.forEach(page => {
+  manualDropdown.innerHTML += `<option value="${page.id}">${page.name}</option>`;
+});
 }
 
 // Helper to select/deselect all pages at once
@@ -761,7 +797,45 @@ formData.append('serverLocation', serverLocation);
     submitBtn.disabled = false;
     submitBtn.innerText = "🚀 Launch Post";
   }
+  // Inside submitPost() right next to formData.append('caption', caption):
+const firstComment = document.getElementById('firstComment').value.trim();
+if (firstComment) {
+  formData.append('firstComment', firstComment);
+}
   
+}
+async function submitManualComment() {
+  const pageId = document.getElementById('manualTargetPage').value;
+  const objectId = document.getElementById('manualPostId').value.trim();
+  const comment = document.getElementById('manualCommentText').value.trim();
+
+  if (!pageId || !objectId || !comment) {
+    return showStatus("⚠️ Please select a page, provide an Object ID, and enter comment text.", true);
+  }
+
+  showStatus("Posting comment to existing post...");
+  try {
+    const res = await fetch('/api/comment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        team: pendingTeam,
+        password: window.currentSessionPassword,
+        pageId,
+        objectId,
+        comment
+      })
+    });
+    const result = await res.json();
+    if (!res.ok || result.error) {
+      showStatus("❌ Failed: " + (result.error || "Unknown error"), true);
+    } else {
+      showStatus(`✅ First comment published! Comment ID: ${result.commentId}`);
+      document.getElementById('manualCommentText').value = '';
+    }
+  } catch (err) {
+    showStatus("❌ Network Error: " + err.message, true);
+  }
 }
 </script>
 
