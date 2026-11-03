@@ -8,7 +8,19 @@ const path = require('path');
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
+const analyticsFilePath = path.join(__dirname, 'post_analytics.csv');
 
+function logPostAnalytics(team, universalId, successCount, failCount) {
+  const fileExists = fs.existsSync(analyticsFilePath);
+  const header = 'Timestamp,Team,Universal_ID,Server,Success_Count,Failed_Count\n';
+  const row = `${new Date().toISOString()},${team},${universalId},US-Server,${successCount},${failCount}\n`;
+
+  const contentToWrite = fileExists ? row : header + row;
+
+  fs.appendFile(analyticsFilePath, contentToWrite, (err) => {
+    if (err) console.error("Failed to write to analytics log:", err);
+  });
+}
 app.use(express.json());
 app.use(express.static(path.join(__dirname))); 
 
@@ -200,7 +212,8 @@ app.post('/api/publish', upload.single('media'), async (req, res) => {
   if (!Array.isArray(targetPageIds) || targetPageIds.length === 0) {
     return res.status(400).json({ error: 'No target pages selected' });
   }
-git   // Ensure Universal ID is provided for video uploads
+
+  // Ensure Universal ID is provided for video uploads
   if (isVideo === 'true' && (!req.body.universalId || !req.body.universalId.trim())) {
     if (req.file && req.file.path) {
       fs.unlink(req.file.path, () => {});
@@ -272,11 +285,7 @@ git   // Ensure Universal ID is provided for video uploads
   }
 
   const uId = req.body.universalId ? req.body.universalId.trim() : 'N/A';
-  const logEntry = `${new Date().toISOString()},${team},${uId},US-Server,${successful.length},${failed.length}\n`;
-  
-  fs.appendFile('post_analytics.csv', logEntry, (err) => {
-    if (err) console.error("Failed to write to analytics log:", err);
-  });
+  logPostAnalytics(team, uId, successful.length, failed.length);
 
   return res.json({
     success: true,
@@ -315,9 +324,8 @@ app.post('/api/comment', async (req, res) => {
   }
 });
 app.get('/api/download-analytics', (req, res) => {
-  const filePath = path.join(__dirname, 'post_analytics.csv');
-  if (fs.existsSync(filePath)) {
-    res.download(filePath, 'post_analytics.csv');
+  if (fs.existsSync(analyticsFilePath)) {
+    res.download(analyticsFilePath, 'post_analytics.csv');
   } else {
     res.status(404).send('No analytics data logged yet on this server instance.');
   }
